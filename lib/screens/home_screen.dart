@@ -56,7 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
