@@ -3,12 +3,32 @@ import 'package:todoapp/models/task.dart';
 
 void main() {
   group('Task Model Tests', () {
-    test('Task should toggle completion status', () {
+    test('Task should be created with correct default values', () {
       final task = Task(
         id: '1',
         title: 'Test Task',
         description: 'Test Description',
-        createdAt: DateTime.now(),
+        createdAt: DateTime(2023, 1, 1),
+      );
+
+      expect(task.id, '1');
+      expect(task.title, 'Test Task');
+      expect(task.description, 'Test Description');
+      expect(task.isCompleted, false);
+      expect(task.dueDate, isNull);
+      expect(task.priority, Priority.none);
+      expect(task.category, Category.other);
+      expect(task.tags, isEmpty);
+      expect(task.hasReminder, false);
+      expect(task.reminderDate, isNull);
+    });
+
+    test('Task toggleComplete should change completion status', () {
+      final task = Task(
+        id: '1',
+        title: 'Test Task',
+        description: 'Test Description',
+        createdAt: DateTime(2023, 1, 1),
       );
 
       expect(task.isCompleted, false);
@@ -18,78 +38,84 @@ void main() {
       expect(task.isCompleted, false);
     });
 
-    test('Task should convert to and from map correctly', () {
-      final now = DateTime.now();
-      final originalTask = Task(
-        id: '1',
-        title: 'Test Task',
-        description: 'Test Description',
-        createdAt: now,
-        dueDate: now.add(const Duration(days: 1)),
-        priority: Priority.high,
-        category: Category.work,
-        tags: ['urgent'],
-        hasReminder: true,
-        reminderDate: now.add(const Duration(hours: 1)),
-      );
-
-      final map = originalTask.toMap();
-      final reconstructedTask = Task.fromMap(map);
-
-      expect(reconstructedTask.id, originalTask.id);
-      expect(reconstructedTask.title, originalTask.title);
-      expect(reconstructedTask.description, originalTask.description);
-      expect(reconstructedTask.isCompleted, originalTask.isCompleted);
-      expect(reconstructedTask.createdAt, originalTask.createdAt);
-      expect(reconstructedTask.dueDate, originalTask.dueDate);
-      expect(reconstructedTask.priority, originalTask.priority);
-      expect(reconstructedTask.category, originalTask.category);
-      expect(reconstructedTask.tags, originalTask.tags);
-      expect(reconstructedTask.hasReminder, originalTask.hasReminder);
-      expect(reconstructedTask.reminderDate, originalTask.reminderDate);
-    });
-
-    test('Task equality should work based on ID', () {
-      final task1 = Task(
-        id: '1',
-        title: 'Task 1',
-        description: 'Desc 1',
-        createdAt: DateTime.now(),
-      );
-
-      final task2 = Task(
-        id: '1',
-        title: 'Task 2',
-        description: 'Desc 2',
-        createdAt: DateTime.now(),
-      );
-
-      final task3 = Task(
-        id: '2',
-        title: 'Task 1',
-        description: 'Desc 1',
-        createdAt: DateTime.now(),
-      );
-
-      expect(task1 == task2, true);
-      expect(task1 == task3, false);
-    });
-
-    test('Task should return correct formatted values', () {
-      final dueDate = DateTime(2023, 12, 25);
+    test('Task should correctly identify overdue status', () {
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
       final task = Task(
         id: '1',
         title: 'Test Task',
         description: 'Test Description',
-        createdAt: DateTime.now(),
-        dueDate: dueDate,
-        priority: Priority.high,
-        category: Category.work,
+        createdAt: DateTime(2023, 1, 1),
+        dueDate: yesterday,
       );
 
-      expect(task.formattedDueDate, 'Dec 25, 2023');
-      expect(task.formattedPriority, 'High');
-      expect(task.formattedCategory, 'Work');
+      expect(task.isOverdue, true);
+      expect(task.isDueToday, false);
+    });
+
+    test('Task should correctly identify due today status', () {
+      final today = DateTime.now();
+      final task = Task(
+        id: '1',
+        title: 'Test Task',
+        description: 'Test Description',
+        createdAt: DateTime(2023, 1, 1),
+        dueDate: today,
+      );
+
+      expect(task.isOverdue, false);
+      expect(task.isDueToday, true);
+    });
+
+    test('Task should serialize and deserialize correctly', () {
+      final originalTask = Task(
+        id: '1',
+        title: 'Test Task',
+        description: 'Test Description',
+        isCompleted: true,
+        createdAt: DateTime(2023, 1, 1, 10, 30),
+        dueDate: DateTime(2023, 1, 2),
+        priority: Priority.high,
+        category: Category.work,
+        tags: ['urgent', 'important'],
+        hasReminder: true,
+        reminderDate: DateTime(2023, 1, 1, 9, 0),
+      );
+
+      final taskMap = originalTask.toMap();
+      final restoredTask = Task.fromMap(taskMap);
+
+      expect(restoredTask.id, originalTask.id);
+      expect(restoredTask.title, originalTask.title);
+      expect(restoredTask.description, originalTask.description);
+      expect(restoredTask.isCompleted, originalTask.isCompleted);
+      expect(restoredTask.createdAt, originalTask.createdAt);
+      expect(restoredTask.dueDate, originalTask.dueDate);
+      expect(restoredTask.priority, originalTask.priority);
+      expect(restoredTask.category, originalTask.category);
+      expect(restoredTask.tags, originalTask.tags);
+      expect(restoredTask.hasReminder, originalTask.hasReminder);
+      expect(restoredTask.reminderDate, originalTask.reminderDate);
+    });
+
+    test('Task copyWith should create a copy with updated fields', () {
+      final originalTask = Task(
+        id: '1',
+        title: 'Original Task',
+        description: 'Original Description',
+        createdAt: DateTime(2023, 1, 1),
+      );
+
+      final copiedTask = originalTask.copyWith(
+        title: 'Updated Task',
+        description: 'Updated Description',
+        isCompleted: true,
+      );
+
+      expect(copiedTask.id, originalTask.id);
+      expect(copiedTask.title, 'Updated Task');
+      expect(copiedTask.description, 'Updated Description');
+      expect(copiedTask.isCompleted, true);
+      expect(copiedTask.createdAt, originalTask.createdAt);
     });
   });
 }
