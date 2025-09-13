@@ -21,14 +21,14 @@ class Task {
     required this.title,
     required this.description,
     this.isCompleted = false,
-    required this.createdAt,
+    DateTime? createdAt, // Make createdAt optional
     this.dueDate,
     this.priority = Priority.none,
     this.category = Category.other,
     this.tags = const [],
     this.hasReminder = false,
     this.reminderDate,
-  });
+  }) : createdAt = createdAt ?? DateTime.now();
 
   void toggleComplete() {
     isCompleted = !isCompleted;
